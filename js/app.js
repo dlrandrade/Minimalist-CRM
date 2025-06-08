@@ -147,9 +147,16 @@ function loadRecentContacts() {
     }
     
     container.innerHTML = recentContacts.map(contact => `
-        <div class="contact-item" style="padding: 0.75rem; border-bottom: 1px solid #e9ecef; cursor: pointer;" onclick="navigateToContact('${contact.id}')">
-            <div style="font-weight: 500;">${contact.name}</div>
-            <div style="color: #6c757d; font-size: 0.9rem;">${contact.email}</div>
+        <div class="recent-contact-item" onclick="navigateToContact('${contact.id}')">
+            <div class="recent-contact-name">${contact.name}</div>
+            ${contact.phone ? `
+                <a href="https://wa.me/55${contact.phone.replace(/\D/g, '')}" 
+                   class="recent-contact-whatsapp" 
+                   target="_blank" 
+                   onclick="event.stopPropagation()">
+                    📱 ${contact.phone}
+                </a>
+            ` : '<div style="color: var(--text-muted); font-size: 0.9rem;">Sem WhatsApp</div>'}
         </div>
     `).join('');
 }
@@ -162,7 +169,7 @@ function loadContacts() {
     const contacts = dataService.getContacts();
     
     if (contacts.length === 0) {
-        container.innerHTML = '<tr><td colspan="6" class="text-center">Nenhum contato encontrado. <a href="contact-form.html">Adicione um novo!</a></td></tr>';
+        container.innerHTML = '<tr><td colspan="8" class="text-center">Nenhum contato encontrado. <a href="contact-form.html">Adicione um novo!</a></td></tr>';
         return;
     }
     
@@ -174,6 +181,7 @@ function loadContacts() {
             <td>${contact.city || '-'}</td>
             <td>${contact.company || '-'}</td>
             <td>${contact.plan || '-'}</td>
+            <td>${contact.paymentDay ? `Dia ${contact.paymentDay}` : '-'}</td>
             <td>
                 <div class="flex gap-1">
                     <a href="contact-detail.html?id=${contact.id}" class="btn btn-small btn-primary">Ver</a>
@@ -373,6 +381,7 @@ function loadContactForm() {
             form.elements.position.value = contact.position || '';
             form.elements.plan.value = contact.plan || '';
             form.elements.notes.value = contact.notes || '';
+            form.elements.paymentDay.value = contact.paymentDay || '';
         }
     } else {
         // Create mode
@@ -407,6 +416,7 @@ function saveContact() {
         position: formData.get('position'),
         plan: formData.get('plan'),
         notes: formData.get('notes'),
+        paymentDay: formData.get('paymentDay'),
         sendToPipeline: formData.get('sendToPipeline') === 'on',
         pipelineStage: formData.get('pipelineStage')
     };
@@ -581,8 +591,20 @@ function loadPipeline() {
         
         container.innerHTML = deals.map(deal => {
             const contact = deal.contactId ? dataService.getContact(deal.contactId) : null;
+            const whatsappLink = contact && contact.phone ? 
+                `https://wa.me/55${contact.phone.replace(/\D/g, '')}` : null;
+            
             return `
                 <div class="deal-card" data-deal-id="${deal.id}" onclick="editDeal('${deal.id}')">
+                    ${whatsappLink ? `
+                        <a href="${whatsappLink}" 
+                           class="whatsapp-btn" 
+                           target="_blank" 
+                           onclick="event.stopPropagation()"
+                           title="Abrir WhatsApp">
+                            ª
+                        </a>
+                    ` : ''}
                     <div class="deal-title">${deal.name}</div>
                     <div class="deal-value">${dataService.formatCurrency(deal.value)}</div>
                     <div class="deal-contact">${contact ? contact.name : 'Sem contato'}</div>
