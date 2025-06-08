@@ -193,7 +193,7 @@ class DataService {
             const newDeal = {
                 ...dealData,
                 id: this.generateId(),
-                createdAt: new.toISOString(),
+                createdAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString()
             };
             deals.push(newDeal);

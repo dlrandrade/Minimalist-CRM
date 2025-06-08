@@ -1,73 +1,98 @@
-# Welcome to your Lovable project
 
-## Project info
+# CRM Minimalista
 
-**URL**: https://lovable.dev/projects/2a14f943-3b2d-40e7-bc0f-d0eb7b4e3b84
+Um sistema de CRM (Customer Relationship Management) simples e funcional, construído com HTML, CSS e JavaScript vanilla.
 
-## How can I edit this code?
+## Funcionalidades
 
-There are several ways of editing your application.
+### 📋 Dashboard
+- Visão geral com estatísticas principais
+- Tarefas para hoje
+- Contatos recentes
+- Ações rápidas
 
-**Use Lovable**
+### 👥 Gestão de Contatos
+- Listar todos os contatos
+- Adicionar novos contatos
+- Editar informações existentes
+- Ver detalhes completos
+- Excluir contatos
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/2a14f943-3b2d-40e7-bc0f-d0eb7b4e3b84) and start prompting.
+### 📞 Interações
+- Registrar interações com contatos (Email, Ligação, Reunião, Nota)
+- Histórico completo de interações
+- Datas e observações detalhadas
 
-Changes made via Lovable will be committed automatically to this repo.
+### ✅ Tarefas
+- Criar tarefas gerais ou associadas a contatos
+- Marcar como concluída/pendente
+- Filtrar por status
+- Datas de vencimento
 
-**Use your preferred IDE**
+### 🔄 Pipeline de Vendas
+- Visualização Kanban com 6 estágios
+- Arrastar e soltar oportunidades entre estágios
+- Valores em moeda brasileira
+- Associação com contatos
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+## Como usar
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+1. **Instalação**: Simplesmente baixe todos os arquivos e mantenha a estrutura de pastas
+2. **Execução**: Abra o arquivo `index.html` em qualquer navegador moderno
+3. **Dados**: Todos os dados são salvos localmente no navegador (localStorage)
 
-Follow these steps:
+## Estrutura de Arquivos
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+```
+├── index.html              # Dashboard principal
+├── contacts.html           # Lista de contatos
+├── contact-detail.html     # Detalhes do contato
+├── contact-form.html       # Formulário de contato
+├── tasks.html             # Lista de tarefas
+├── pipeline.html          # Pipeline de vendas
+├── css/
+│   └── style.css          # Estilos principais
+└── js/
+    ├── app.js             # Lógica da aplicação
+    └── dataService.js     # Gerenciamento de dados
 ```
 
-**Edit a file directly in GitHub**
+## Navegação
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+- **Dashboard**: Visão geral e acesso rápido
+- **Contatos**: Gerenciamento completo de contatos
+- **Tarefas**: Controle de atividades
+- **Pipeline**: Acompanhamento de vendas
 
-**Use GitHub Codespaces**
+## Recursos Técnicos
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+- **Responsivo**: Funciona em desktop e mobile
+- **Persistência**: Dados salvos no localStorage
+- **Drag & Drop**: Arrastar oportunidades no pipeline
+- **Validação**: Formulários com validação básica
+- **Notificações**: Toast messages para feedback
 
-## What technologies are used for this project?
+## Requisitos
 
-This project is built with:
+- Navegador moderno com suporte a ES6+
+- JavaScript habilitado
+- Não requer servidor ou instalação
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## Backup de Dados
 
-## How can I deploy this project?
+Os dados ficam salvos no localStorage do navegador. Para backup:
+1. Abra as Ferramentas do Desenvolvedor (F12)
+2. Vá na aba Application/Storage
+3. Encontre localStorage para o seu domínio
+4. Copie os dados das chaves: contacts, interactions, tasks, deals
 
-Simply open [Lovable](https://lovable.dev/projects/2a14f943-3b2d-40e7-bc0f-d0eb7b4e3b84) and click on Share -> Publish.
+## Limitações
 
-## Can I connect a custom domain to my Lovable project?
+- Dados locais apenas (não compartilhados entre dispositivos)
+- Sem autenticação ou múltiplos usuários
+- Backup manual necessário
+- Funciona apenas no navegador onde foi usado
 
-Yes, you can!
+## Personalização
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+O CSS está organizado para fácil customização. Modifique as variáveis de cor no início do arquivo `style.css` para alterar o tema.

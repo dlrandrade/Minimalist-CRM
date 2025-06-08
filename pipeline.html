@@ -28,32 +28,32 @@
             </div>
 
             <div class="pipeline">
-                <div class="pipeline-column">
+                <div class="pipeline-column" data-stage="Lead">
                     <div class="pipeline-header">Lead</div>
                     <div id="stage-lead"></div>
                 </div>
 
-                <div class="pipeline-column">
+                <div class="pipeline-column" data-stage="Qualificação">
                     <div class="pipeline-header">Qualificação</div>
                     <div id="stage-qualificacao"></div>
                 </div>
 
-                <div class="pipeline-column">
+                <div class="pipeline-column" data-stage="Proposta">
                     <div class="pipeline-header">Proposta</div>
                     <div id="stage-proposta"></div>
                 </div>
 
-                <div class="pipeline-column">
+                <div class="pipeline-column" data-stage="Negociação">
                     <div class="pipeline-header">Negociação</div>
                     <div id="stage-negociacao"></div>
                 </div>
 
-                <div class="pipeline-column">
+                <div class="pipeline-column" data-stage="Ganho">
                     <div class="pipeline-header">Ganho</div>
                     <div id="stage-ganho"></div>
                 </div>
 
-                <div class="pipeline-column">
+                <div class="pipeline-column" data-stage="Perdido">
                     <div class="pipeline-header">Perdido</div>
                     <div id="stage-perdido"></div>
                 </div>
@@ -114,9 +114,122 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             loadPipeline();
+            initializeDragAndDrop();
         });
 
-        // Show delete button when editing
+        // Initialize drag and drop functionality
+        function initializeDragAndDrop() {
+            let draggedElement = null;
+
+            // Add event listeners to all deal cards
+            document.addEventListener('mousedown', function(e) {
+                if (e.target.closest('.deal-card')) {
+                    draggedElement = e.target.closest('.deal-card');
+                    draggedElement.classList.add('dragging');
+                    draggedElement.draggable = true;
+                }
+            });
+
+            document.addEventListener('dragstart', function(e) {
+                if (e.target.classList.contains('deal-card')) {
+                    e.dataTransfer.setData('text/plain', e.target.dataset.dealId);
+                }
+            });
+
+            document.addEventListener('dragend', function(e) {
+                if (e.target.classList.contains('deal-card')) {
+                    e.target.classList.remove('dragging');
+                    e.target.draggable = false;
+                }
+                // Remove drag-over class from all columns
+                document.querySelectorAll('.pipeline-column').forEach(col => {
+                    col.classList.remove('drag-over');
+                });
+            });
+
+            // Add drop zone event listeners
+            document.querySelectorAll('.pipeline-column').forEach(column => {
+                column.addEventListener('dragover', function(e) {
+                    e.preventDefault();
+                    this.classList.add('drag-over');
+                });
+
+                column.addEventListener('dragleave', function(e) {
+                    if (!this.contains(e.relatedTarget)) {
+                        this.classList.remove('drag-over');
+                    }
+                });
+
+                column.addEventListener('drop', function(e) {
+                    e.preventDefault();
+                    this.classList.remove('drag-over');
+                    
+                    const dealId = e.dataTransfer.getData('text/plain');
+                    const newStage = this.dataset.stage;
+                    
+                    if (dealId && newStage) {
+                        moveDealToStage(dealId, newStage);
+                    }
+                });
+            });
+        }
+
+        function moveDealToStage(dealId, newStage) {
+            const deal = dataService.getDeal(dealId);
+            if (deal && deal.stage !== newStage) {
+                deal.stage = newStage;
+                dataService.saveDeal(deal);
+                showToast(`Oportunidade movida para ${newStage}!`, 'success');
+                loadPipeline();
+            }
+        }
+
+        function loadPipeline() {
+            const stages = ['Lead', 'Qualificação', 'Proposta', 'Negociação', 'Ganho', 'Perdido'];
+            
+            stages.forEach(stage => {
+                const stageId = stage.toLowerCase().replace('ç', 'c').replace('ã', 'a');
+                const container = document.getElementById(`stage-${stageId}`);
+                if (!container) return;
+                
+                const deals = dataService.getDealsByStage(stage);
+                
+                if (deals.length === 0) {
+                    container.innerHTML = '<div class="empty-state" style="padding: 1rem; font-size: 0.9rem;">Nenhuma oportunidade</div>';
+                    return;
+                }
+                
+                container.innerHTML = deals.map(deal => {
+                    const contact = deal.contactId ? dataService.getContact(deal.contactId) : null;
+                    return `
+                        <div class="deal-card" data-deal-id="${deal.id}" onclick="editDeal('${deal.id}')">
+                            <div class="deal-title">${deal.name}</div>
+                            <div class="deal-value">${dataService.formatCurrency(deal.value)}</div>
+                            <div class="deal-contact">${contact ? contact.name : 'Sem contato'}</div>
+                        </div>
+                    `;
+                }).join('');
+            });
+        }
+
+        function showNewDealModal() {
+            // Load contacts for select
+            const contactSelect = document.getElementById('dealContactId');
+            if (contactSelect) {
+                const contacts = dataService.getContactsSelectOptions();
+                contactSelect.innerHTML = '<option value="">Selecionar contato (opcional)</option>' +
+                    contacts.map(contact => `<option value="${contact.value}">${contact.text}</option>`).join('');
+            }
+            
+            // Reset form
+            document.getElementById('dealForm').reset();
+            document.getElementById('dealId').value = '';
+            document.getElementById('dealModalTitle').textContent = 'Nova Oportunidade';
+            document.getElementById('deleteDealBtn').style.display = 'none';
+            
+            showModal('dealModal');
+        }
+
         function editDeal(dealId) {
             const deal = dataService.getDeal(dealId);
             if (!deal) return;
@@ -137,24 +250,6 @@
             document.getElementById('dealStage').value = deal.stage;
             document.getElementById('dealModalTitle').textContent = 'Editar Oportunidade';
             document.getElementById('deleteDealBtn').style.display = 'inline-block';
-            
-            showModal('dealModal');
-        }
-
-        function showNewDealModal() {
-            // Load contacts for select
-            const contactSelect = document.getElementById('dealContactId');
-            if (contactSelect) {
-                const contacts = dataService.getContactsSelectOptions();
-                contactSelect.innerHTML = '<option value="">Selecionar contato (opcional)</option>' +
-                    contacts.map(contact => `<option value="${contact.value}">${contact.text}</option>`).join('');
-            }
-            
-            // Reset form
-            document.getElementById('dealForm').reset();
-            document.getElementById('dealId').value = '';
-            document.getElementById('dealModalTitle').textContent = 'Nova Oportunidade';
-            document.getElementById('deleteDealBtn').style.display = 'none';
             
             showModal('dealModal');
         }
