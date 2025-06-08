@@ -1,5 +1,19 @@
-
 // App.js - Lógica principal da aplicação
+
+// Verificar autenticação
+function checkAuth() {
+    if (!localStorage.getItem('isLoggedIn') && !window.location.pathname.includes('login.html')) {
+        window.location.href = 'login.html';
+        return false;
+    }
+    return true;
+}
+
+// Logout
+function logout() {
+    localStorage.removeItem('isLoggedIn');
+    window.location.href = 'login.html';
+}
 
 // Utility functions
 function showModal(modalId) {
@@ -74,7 +88,7 @@ function validateForm(formElement) {
     return isValid;
 }
 
-// Dashboard functions
+// Dashboard functions - atualizado
 function loadDashboardData() {
     const stats = dataService.getDashboardStats();
     
@@ -82,7 +96,8 @@ function loadDashboardData() {
     document.getElementById('totalContacts').textContent = stats.totalContacts;
     document.getElementById('pendingTasks').textContent = stats.pendingTasks;
     document.getElementById('activeDeals').textContent = stats.activeDeals;
-    document.getElementById('totalValue').textContent = stats.totalValue;
+    document.getElementById('totalValueInNegotiation').textContent = stats.totalValueInNegotiation;
+    document.getElementById('monthlyValue').textContent = stats.monthlyValue;
     
     // Load today's tasks
     loadTodayTasks();
@@ -139,7 +154,7 @@ function loadRecentContacts() {
     `).join('');
 }
 
-// Contact functions
+// Contact functions - atualizado
 function loadContacts() {
     const container = document.getElementById('contactsTable');
     if (!container) return;
@@ -147,7 +162,7 @@ function loadContacts() {
     const contacts = dataService.getContacts();
     
     if (contacts.length === 0) {
-        container.innerHTML = '<tr><td colspan="5" class="text-center">Nenhum contato encontrado. <a href="contact-form.html">Adicione um novo!</a></td></tr>';
+        container.innerHTML = '<tr><td colspan="6" class="text-center">Nenhum contato encontrado. <a href="contact-form.html">Adicione um novo!</a></td></tr>';
         return;
     }
     
@@ -156,27 +171,31 @@ function loadContacts() {
             <td>${contact.name}</td>
             <td>${contact.email}</td>
             <td>${contact.phone || '-'}</td>
+            <td>${contact.city || '-'}</td>
             <td>${contact.company || '-'}</td>
+            <td>${contact.plan || '-'}</td>
             <td>
                 <div class="flex gap-1">
                     <a href="contact-detail.html?id=${contact.id}" class="btn btn-small btn-primary">Ver</a>
                     <a href="contact-form.html?id=${contact.id}" class="btn btn-small btn-secondary">Editar</a>
-                    <button onclick="event.stopPropagation(); deleteContact('${contact.id}')" class="btn btn-small btn-danger">Excluir</button>
+                    <button onclick="event.stopPropagation(); deleteContactWithConfirmation('${contact.id}', '${contact.name}')" class="btn btn-small btn-danger">Excluir</button>
                 </div>
             </td>
         </tr>
     `).join('');
 }
 
-function deleteContact(contactId) {
-    if (confirmDelete('Tem certeza que deseja excluir este contato? Todas as interações e tarefas relacionadas também serão excluídas.')) {
-        dataService.deleteContact(contactId);
-        showToast('Contato excluído com sucesso!', 'success');
-        loadContacts();
-    }
+function deleteContactWithConfirmation(contactId, contactName) {
+    dataService.confirmDelete(contactName, function(confirmed) {
+        if (confirmed) {
+            dataService.deleteContact(contactId);
+            showToast('Contato excluído com sucesso!', 'success');
+            loadContacts();
+        }
+    });
 }
 
-// Contact detail functions
+// Contact detail functions - atualizado
 function loadContactDetail() {
     const contactId = getUrlParameter('id');
     if (!contactId) {
@@ -198,18 +217,16 @@ function loadContactDetail() {
     document.getElementById('contactName').textContent = contact.name;
     document.getElementById('contactEmail').textContent = contact.email;
     document.getElementById('contactPhone').textContent = contact.phone || '-';
+    document.getElementById('contactCity').textContent = contact.city || '-';
     document.getElementById('contactCompany').textContent = contact.company || '-';
     document.getElementById('contactPosition').textContent = contact.position || '-';
+    document.getElementById('contactPlan').textContent = contact.plan || '-';
     document.getElementById('contactNotes').textContent = contact.notes || '-';
     
     // Update action buttons
     document.getElementById('editContactBtn').href = `contact-form.html?id=${contactId}`;
     document.getElementById('deleteContactBtn').onclick = () => {
-        if (confirmDelete('Tem certeza que deseja excluir este contato?')) {
-            dataService.deleteContact(contactId);
-            showToast('Contato excluído com sucesso!', 'success');
-            window.location.href = 'contacts.html';
-        }
+        deleteContactWithConfirmation(contactId, contact.name);
     };
     
     // Load interactions and tasks
@@ -234,12 +251,23 @@ function loadContactInteractions(contactId) {
                 <span class="interaction-type">${interaction.type}</span>
                 <div>
                     <span class="interaction-date">${dataService.formatDate(interaction.date)}</span>
-                    <button onclick="deleteInteraction('${interaction.id}')" class="btn btn-small btn-danger" style="margin-left: 1rem;">Excluir</button>
+                    <button onclick="deleteInteractionWithConfirmation('${interaction.id}', '${interaction.type}')" class="btn btn-small btn-danger" style="margin-left: 1rem;">Excluir</button>
                 </div>
             </div>
             <div class="interaction-notes">${interaction.notes}</div>
         </div>
     `).join('');
+}
+
+function deleteInteractionWithConfirmation(interactionId, interactionType) {
+    dataService.confirmDelete(`Interação ${interactionType}`, function(confirmed) {
+        if (confirmed) {
+            dataService.deleteInteraction(interactionId);
+            showToast('Interação excluída com sucesso!', 'success');
+            const contactId = getUrlParameter('id');
+            loadContactInteractions(contactId);
+        }
+    });
 }
 
 function loadContactTasks(contactId) {
@@ -311,15 +339,6 @@ function addContactTask() {
     loadContactTasks(contactId);
 }
 
-function deleteInteraction(interactionId) {
-    if (confirmDelete('Tem certeza que deseja excluir esta interação?')) {
-        dataService.deleteInteraction(interactionId);
-        showToast('Interação excluída com sucesso!', 'success');
-        const contactId = getUrlParameter('id');
-        loadContactInteractions(contactId);
-    }
-}
-
 function toggleTask(taskId) {
     dataService.toggleTaskComplete(taskId);
     const contactId = getUrlParameter('id');
@@ -335,7 +354,7 @@ function deleteTask(taskId) {
     }
 }
 
-// Contact form functions
+// Contact form functions - atualizado
 function loadContactForm() {
     const contactId = getUrlParameter('id');
     const titleElement = document.getElementById('formTitle');
@@ -349,8 +368,10 @@ function loadContactForm() {
             form.elements.name.value = contact.name || '';
             form.elements.email.value = contact.email || '';
             form.elements.phone.value = contact.phone || '';
+            form.elements.city.value = contact.city || '';
             form.elements.company.value = contact.company || '';
             form.elements.position.value = contact.position || '';
+            form.elements.plan.value = contact.plan || '';
             form.elements.notes.value = contact.notes || '';
         }
     } else {
@@ -381,9 +402,13 @@ function saveContact() {
         name: formData.get('name'),
         email: formData.get('email'),
         phone: formData.get('phone'),
+        city: formData.get('city'),
         company: formData.get('company'),
         position: formData.get('position'),
-        notes: formData.get('notes')
+        plan: formData.get('plan'),
+        notes: formData.get('notes'),
+        sendToPipeline: formData.get('sendToPipeline') === 'on',
+        pipelineStage: formData.get('pipelineStage')
     };
     
     dataService.saveContact(contactData);
@@ -396,7 +421,7 @@ function saveContact() {
     }
 }
 
-// Tasks functions
+// Tasks functions - atualizado com funcionalidade de editar
 function loadTasks() {
     const container = document.getElementById('tasksContainer');
     if (!container) return;
@@ -428,23 +453,76 @@ function loadTasks() {
                         ${contact ? ` | Contato: ${contact.name}` : ' | Tarefa geral'}
                     </div>
                 </div>
-                <button onclick="deleteTaskFromList('${task.id}')" class="btn btn-small btn-danger">Excluir</button>
+                <button onclick="editTask('${task.id}')" class="btn btn-small btn-secondary">Editar</button>
+                <button onclick="deleteTaskWithConfirmation('${task.id}', '${task.title}')" class="btn btn-small btn-danger">Excluir</button>
             </div>
         `;
     }).join('');
 }
 
-function toggleTaskFromList(taskId) {
-    dataService.toggleTaskComplete(taskId);
+function editTask(taskId) {
+    const task = dataService.getTasks().find(t => t.id === taskId);
+    if (!task) return;
+    
+    // Preencher o modal de edição
+    document.getElementById('editTaskId').value = task.id;
+    document.getElementById('editTaskTitle').value = task.title;
+    document.getElementById('editTaskDueDate').value = task.dueDate;
+    document.getElementById('editTaskContactId').value = task.contactId || '';
+    
+    // Carregar contatos no select
+    const contactSelect = document.getElementById('editTaskContactId');
+    const contacts = dataService.getContactsSelectOptions();
+    contactSelect.innerHTML = '<option value="">Tarefa geral (sem contato)</option>' +
+        contacts.map(contact => `<option value="${contact.value}">${contact.text}</option>`).join('');
+    contactSelect.value = task.contactId || '';
+    
+    showModal('editTaskModal');
+}
+
+function saveEditedTask() {
+    const form = document.getElementById('editTaskForm');
+    
+    if (!validateForm(form)) {
+        showToast('Por favor, preencha todos os campos obrigatórios.', 'error');
+        return;
+    }
+    
+    const formData = new FormData(form);
+    const taskData = {
+        id: formData.get('id'),
+        title: formData.get('title'),
+        dueDate: formData.get('dueDate'),
+        contactId: formData.get('contactId') || null,
+        completed: false // Manter o status atual
+    };
+    
+    // Manter o status de completed atual
+    const currentTask = dataService.getTasks().find(t => t.id === taskData.id);
+    if (currentTask) {
+        taskData.completed = currentTask.completed;
+    }
+    
+    dataService.saveTask(taskData);
+    showToast('Tarefa atualizada com sucesso!', 'success');
+    hideModal('editTaskModal');
+    form.reset();
     loadTasks();
 }
 
-function deleteTaskFromList(taskId) {
-    if (confirmDelete('Tem certeza que deseja excluir esta tarefa?')) {
-        dataService.deleteTask(taskId);
-        showToast('Tarefa excluída com sucesso!', 'success');
-        loadTasks();
-    }
+function deleteTaskWithConfirmation(taskId, taskTitle) {
+    dataService.confirmDelete(taskTitle, function(confirmed) {
+        if (confirmed) {
+            dataService.deleteTask(taskId);
+            showToast('Tarefa excluída com sucesso!', 'success');
+            loadTasks();
+        }
+    });
+}
+
+function toggleTaskFromList(taskId) {
+    dataService.toggleTaskComplete(taskId);
+    loadTasks();
 }
 
 function showNewTaskModal() {
@@ -482,12 +560,16 @@ function saveNewTask() {
     loadTasks();
 }
 
-// Pipeline functions
+// Pipeline functions - atualizado
 function loadPipeline() {
-    const stages = ['Lead', 'Qualificação', 'Proposta', 'Negociação', 'Ganho', 'Perdido'];
+    const stages = ['Lead', 'Qualificação', 'Proposta', 'Negociação', 'Ganho/Cliente', 'Perdido'];
     
     stages.forEach(stage => {
-        const container = document.getElementById(`stage-${stage.toLowerCase().replace('ção', 'cao').replace('ã', 'a')}`);
+        const stageId = stage.toLowerCase()
+            .replace('ç', 'c')
+            .replace('ã', 'a')
+            .replace('/', '-');
+        const container = document.getElementById(`stage-${stageId}`);
         if (!container) return;
         
         const deals = dataService.getDealsByStage(stage);
@@ -500,7 +582,7 @@ function loadPipeline() {
         container.innerHTML = deals.map(deal => {
             const contact = deal.contactId ? dataService.getContact(deal.contactId) : null;
             return `
-                <div class="deal-card" onclick="editDeal('${deal.id}')">
+                <div class="deal-card" data-deal-id="${deal.id}" onclick="editDeal('${deal.id}')">
                     <div class="deal-title">${deal.name}</div>
                     <div class="deal-value">${dataService.formatCurrency(deal.value)}</div>
                     <div class="deal-contact">${contact ? contact.name : 'Sem contato'}</div>
@@ -508,6 +590,25 @@ function loadPipeline() {
             `;
         }).join('');
     });
+}
+
+function deleteDealWithConfirmation(dealId, dealName) {
+    dataService.confirmDelete(dealName, function(confirmed) {
+        if (confirmed) {
+            dataService.deleteDeal(dealId);
+            showToast('Oportunidade excluída com sucesso!', 'success');
+            hideModal('dealModal');
+            loadPipeline();
+        }
+    });
+}
+
+function deleteDealFromModal() {
+    const dealId = document.getElementById('dealId').value;
+    const dealName = document.getElementById('dealName').value;
+    if (!dealId) return;
+    
+    deleteDealWithConfirmation(dealId, dealName);
 }
 
 function showNewDealModal() {
@@ -523,6 +624,7 @@ function showNewDealModal() {
     document.getElementById('dealForm').reset();
     document.getElementById('dealId').value = '';
     document.getElementById('dealModalTitle').textContent = 'Nova Oportunidade';
+    document.getElementById('deleteDealBtn').style.display = 'none';
     
     showModal('dealModal');
 }
@@ -546,6 +648,7 @@ function editDeal(dealId) {
     document.getElementById('dealValue').value = deal.value;
     document.getElementById('dealStage').value = deal.stage;
     document.getElementById('dealModalTitle').textContent = 'Editar Oportunidade';
+    document.getElementById('deleteDealBtn').style.display = 'inline-block';
     
     showModal('dealModal');
 }
@@ -573,20 +676,21 @@ function saveDeal() {
     loadPipeline();
 }
 
-function deleteDealFromModal() {
-    const dealId = document.getElementById('dealId').value;
-    if (!dealId) return;
-    
-    if (confirmDelete('Tem certeza que deseja excluir esta oportunidade?')) {
-        dataService.deleteDeal(dealId);
-        showToast('Oportunidade excluída com sucesso!', 'success');
-        hideModal('dealModal');
-        loadPipeline();
-    }
-}
-
-// Global event listeners
+// Global event listeners - atualizado
 document.addEventListener('DOMContentLoaded', function() {
+    // Verificar autenticação
+    if (!checkAuth()) return;
+    
+    // Adicionar botão de logout ao header se existir
+    const nav = document.querySelector('.nav');
+    if (nav && !nav.querySelector('.logout-btn')) {
+        const logoutBtn = document.createElement('button');
+        logoutBtn.className = 'logout-btn';
+        logoutBtn.textContent = 'Sair';
+        logoutBtn.onclick = logout;
+        nav.appendChild(logoutBtn);
+    }
+    
     // Close modals when clicking outside
     document.addEventListener('click', function(e) {
         if (e.target.classList.contains('modal')) {

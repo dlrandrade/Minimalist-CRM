@@ -1,4 +1,3 @@
-
 // Data Service - Gerencia todas as operações de localStorage
 class DataService {
     constructor() {
@@ -54,6 +53,17 @@ class DataService {
                 updatedAt: new Date().toISOString()
             };
             contacts.push(newContact);
+            
+            // Se o campo sendToPipeline estiver marcado, criar uma oportunidade
+            if (contactData.sendToPipeline && contactData.pipelineStage) {
+                const dealData = {
+                    name: `Oportunidade - ${contactData.name}`,
+                    value: 0,
+                    contactId: newContact.id,
+                    stage: contactData.pipelineStage
+                };
+                this.saveDeal(dealData);
+            }
         }
         
         localStorage.setItem('contacts', JSON.stringify(contacts));
@@ -235,22 +245,77 @@ class DataService {
         return new Date(dateString).toLocaleDateString('pt-BR');
     }
 
-    // Dashboard stats
+    // Dashboard stats - atualizado
     getDashboardStats() {
         const contacts = this.getContacts();
         const tasks = this.getTasks();
         const deals = this.getDeals();
         
         const pendingTasks = tasks.filter(task => !task.completed);
-        const activeDeals = deals.filter(deal => !['Ganho', 'Perdido'].includes(deal.stage));
-        const totalValue = activeDeals.reduce((sum, deal) => sum + (parseFloat(deal.value) || 0), 0);
+        const activeDeals = deals.filter(deal => !['Ganho/Cliente', 'Perdido'].includes(deal.stage));
+        const wonDeals = deals.filter(deal => deal.stage === 'Ganho/Cliente');
+        
+        const totalValueInNegotiation = activeDeals.reduce((sum, deal) => sum + (parseFloat(deal.value) || 0), 0);
+        const monthlyValue = wonDeals.reduce((sum, deal) => sum + (parseFloat(deal.value) || 0), 0);
         
         return {
             totalContacts: contacts.length,
             pendingTasks: pendingTasks.length,
             activeDeals: activeDeals.length,
-            totalValue: this.formatCurrency(totalValue)
+            totalValueInNegotiation: this.formatCurrency(totalValueInNegotiation),
+            monthlyValue: this.formatCurrency(monthlyValue)
         };
+    }
+
+    // Função para confirmação de exclusão
+    confirmDelete(itemName, callback) {
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.style.display = 'block';
+        
+        modal.innerHTML = `
+            <div class="modal-content">
+                <div class="delete-confirmation">
+                    <h3>⚠️ Confirmar Exclusão</h3>
+                    <p>Tem certeza que deseja excluir "${itemName}"?</p>
+                    <p>Para confirmar, digite <strong>EXCLUIR</strong> abaixo:</p>
+                    <input type="text" class="delete-input" id="deleteConfirmInput" placeholder="Digite EXCLUIR">
+                    <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                        <button class="btn btn-danger" id="confirmDeleteBtn" disabled>Excluir</button>
+                        <button class="btn btn-secondary" id="cancelDeleteBtn">Cancelar</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        const input = modal.querySelector('#deleteConfirmInput');
+        const confirmBtn = modal.querySelector('#confirmDeleteBtn');
+        const cancelBtn = modal.querySelector('#cancelDeleteBtn');
+        
+        input.addEventListener('input', function() {
+            confirmBtn.disabled = this.value !== 'EXCLUIR';
+        });
+        
+        confirmBtn.addEventListener('click', function() {
+            document.body.removeChild(modal);
+            callback(true);
+        });
+        
+        cancelBtn.addEventListener('click', function() {
+            document.body.removeChild(modal);
+            callback(false);
+        });
+        
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                document.body.removeChild(modal);
+                callback(false);
+            }
+        });
+        
+        input.focus();
     }
 }
 

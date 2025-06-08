@@ -22,92 +22,101 @@
 
     <main class="main">
         <div class="container">
-            <div class="contact-header">
+            <div class="flex-between mb-2">
                 <h2 id="contactName">Carregando...</h2>
-                <div class="contact-actions">
+                <div class="flex gap-1">
                     <a href="#" id="editContactBtn" class="btn btn-secondary">Editar</a>
                     <button id="deleteContactBtn" class="btn btn-danger">Excluir</button>
                     <a href="contacts.html" class="btn btn-primary">Voltar</a>
                 </div>
             </div>
 
-            <div class="contact-info card">
-                <h3>Informações do Contato</h3>
-                <div class="contact-info">
-                    <div class="info-item">
-                        <div class="info-label">Email</div>
-                        <div class="info-value" id="contactEmail">-</div>
-                    </div>
-                    <div class="info-item">
-                        <div class="info-label">Telefone</div>
-                        <div class="info-value" id="contactPhone">-</div>
-                    </div>
-                    <div class="info-item">
-                        <div class="info-label">Empresa</div>
-                        <div class="info-value" id="contactCompany">-</div>
-                    </div>
-                    <div class="info-item">
-                        <div class="info-label">Cargo</div>
-                        <div class="info-value" id="contactPosition">-</div>
-                    </div>
-                    <div class="info-item" style="grid-column: 1/-1;">
-                        <div class="info-label">Observações</div>
-                        <div class="info-value" id="contactNotes">-</div>
-                    </div>
+            <div class="contact-info">
+                <div class="contact-info-item">
+                    <div class="contact-info-label">Email</div>
+                    <div class="contact-info-value" id="contactEmail">-</div>
+                </div>
+                <div class="contact-info-item">
+                    <div class="contact-info-label">Telefone</div>
+                    <div class="contact-info-value" id="contactPhone">-</div>
+                </div>
+                <div class="contact-info-item">
+                    <div class="contact-info-label">Cidade</div>
+                    <div class="contact-info-value" id="contactCity">-</div>
+                </div>
+                <div class="contact-info-item">
+                    <div class="contact-info-label">Empresa</div>
+                    <div class="contact-info-value" id="contactCompany">-</div>
+                </div>
+                <div class="contact-info-item">
+                    <div class="contact-info-label">Cargo</div>
+                    <div class="contact-info-value" id="contactPosition">-</div>
+                </div>
+                <div class="contact-info-item">
+                    <div class="contact-info-label">Plano</div>
+                    <div class="contact-info-value" id="contactPlan">-</div>
                 </div>
             </div>
 
-            <div class="interactions card">
-                <h3>Interações</h3>
-                <div id="interactionsList">
-                    <p class="empty-state">Carregando interações...</p>
+            <div class="section">
+                <div class="contact-info-item">
+                    <div class="contact-info-label">Observações</div>
+                    <div class="contact-info-value" id="contactNotes">-</div>
                 </div>
-                
-                <form id="interactionForm" class="mt-2">
-                    <h4>Adicionar Nova Interação</h4>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr 2fr auto; gap: 1rem; align-items: end;">
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                <section class="section">
+                    <h3>Interações</h3>
+                    
+                    <form id="interactionForm" style="margin-bottom: 2rem;">
                         <div class="form-group">
-                            <label class="form-label">Tipo</label>
+                            <label class="form-label">Tipo de Interação *</label>
                             <select name="type" class="form-select" required>
+                                <option value="">Selecionar tipo</option>
                                 <option value="Email">Email</option>
+                                <option value="WhatsApp">WhatsApp</option>
                                 <option value="Ligação">Ligação</option>
                                 <option value="Reunião">Reunião</option>
                                 <option value="Nota">Nota</option>
                             </select>
                         </div>
+                        
                         <div class="form-group">
-                            <label class="form-label">Data</label>
+                            <label class="form-label">Data *</label>
                             <input type="date" name="date" class="form-input" required>
                         </div>
+                        
                         <div class="form-group">
-                            <label class="form-label">Notas</label>
-                            <input type="text" name="notes" class="form-input" placeholder="Descreva a interação..." required>
+                            <label class="form-label">Observações *</label>
+                            <textarea name="notes" class="form-textarea" placeholder="Detalhes da interação..." required></textarea>
                         </div>
-                        <button type="button" onclick="addInteraction()" class="btn btn-primary">Adicionar</button>
-                    </div>
-                </form>
-            </div>
+                        
+                        <button type="button" onclick="addInteraction()" class="btn btn-primary">Adicionar Interação</button>
+                    </form>
+                    
+                    <div id="interactionsList"></div>
+                </section>
 
-            <div class="tasks card">
-                <h3>Tarefas</h3>
-                <div id="tasksList">
-                    <p class="empty-state">Carregando tarefas...</p>
-                </div>
-                
-                <form id="taskForm" class="mt-2">
-                    <h4>Adicionar Nova Tarefa</h4>
-                    <div style="display: grid; grid-template-columns: 2fr 1fr auto; gap: 1rem; align-items: end;">
+                <section class="section">
+                    <h3>Tarefas</h3>
+                    
+                    <form id="taskForm" style="margin-bottom: 2rem;">
                         <div class="form-group">
-                            <label class="form-label">Título da Tarefa</label>
-                            <input type="text" name="title" class="form-input" placeholder="Descreva a tarefa..." required>
+                            <label class="form-label">Título da Tarefa *</label>
+                            <input type="text" name="title" class="form-input" placeholder="Ex: Ligar para cliente" required>
                         </div>
+                        
                         <div class="form-group">
-                            <label class="form-label">Data de Vencimento</label>
+                            <label class="form-label">Data de Vencimento *</label>
                             <input type="date" name="dueDate" class="form-input" required>
                         </div>
-                        <button type="button" onclick="addContactTask()" class="btn btn-primary">Adicionar</button>
-                    </div>
-                </form>
+                        
+                        <button type="button" onclick="addContactTask()" class="btn btn-primary">Adicionar Tarefa</button>
+                    </form>
+                    
+                    <div id="tasksList"></div>
+                </section>
             </div>
         </div>
     </main>

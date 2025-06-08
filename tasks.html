@@ -27,17 +27,19 @@
                 <button onclick="showNewTaskModal()" class="btn btn-primary">Nova Tarefa</button>
             </div>
 
-            <div class="filter-bar">
-                <label>Filtrar por status:</label>
-                <select id="statusFilter" class="form-select" onchange="loadTasks()" style="width: auto;">
-                    <option value="all">Todas</option>
-                    <option value="pending">Pendentes</option>
-                    <option value="completed">Concluídas</option>
-                </select>
-            </div>
+            <div class="section">
+                <div style="margin-bottom: 1.5rem;">
+                    <label class="form-label">Filtrar por Status:</label>
+                    <select id="statusFilter" class="form-select" style="width: auto; display: inline-block;" onchange="loadTasks()">
+                        <option value="all">Todas</option>
+                        <option value="pending">Pendentes</option>
+                        <option value="completed">Concluídas</option>
+                    </select>
+                </div>
 
-            <div id="tasksContainer">
-                <div class="empty-state">Carregando tarefas...</div>
+                <div id="tasksContainer">
+                    <div class="empty-state">Carregando tarefas...</div>
+                </div>
             </div>
         </div>
     </main>
@@ -50,26 +52,65 @@
                 <button class="close-modal" onclick="hideModal('newTaskModal')">&times;</button>
             </div>
             <form id="newTaskForm">
-                <div class="form-group">
-                    <label class="form-label">Título *</label>
-                    <input type="text" name="title" class="form-input" placeholder="Descreva a tarefa..." required>
-                </div>
+                <div style="padding: 1.5rem;">
+                    <div class="form-group">
+                        <label class="form-label">Título da Tarefa *</label>
+                        <input type="text" name="title" class="form-input" placeholder="Ex: Ligar para cliente" required>
+                    </div>
 
-                <div class="form-group">
-                    <label class="form-label">Data de Vencimento *</label>
-                    <input type="date" name="dueDate" class="form-input" required>
-                </div>
+                    <div class="form-group">
+                        <label class="form-label">Data de Vencimento *</label>
+                        <input type="date" name="dueDate" class="form-input" required>
+                    </div>
 
-                <div class="form-group">
-                    <label class="form-label">Contato Associado</label>
-                    <select name="contactId" id="taskContactId" class="form-select">
-                        <option value="">Carregando contatos...</option>
-                    </select>
-                </div>
+                    <div class="form-group">
+                        <label class="form-label">Associar a Contato</label>
+                        <select id="taskContactId" name="contactId" class="form-select">
+                            <option value="">Carregando contatos...</option>
+                        </select>
+                    </div>
 
-                <div class="form-actions">
-                    <button type="button" onclick="saveNewTask()" class="btn btn-success">Salvar</button>
-                    <button type="button" onclick="hideModal('newTaskModal')" class="btn btn-secondary">Cancelar</button>
+                    <div class="form-actions">
+                        <button type="button" onclick="saveNewTask()" class="btn btn-success">Salvar</button>
+                        <button type="button" onclick="hideModal('newTaskModal')" class="btn btn-secondary">Cancelar</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Editar Tarefa -->
+    <div id="editTaskModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Editar Tarefa</h3>
+                <button class="close-modal" onclick="hideModal('editTaskModal')">&times;</button>
+            </div>
+            <form id="editTaskForm">
+                <div style="padding: 1.5rem;">
+                    <input type="hidden" id="editTaskId" name="id">
+                    
+                    <div class="form-group">
+                        <label class="form-label">Título da Tarefa *</label>
+                        <input type="text" id="editTaskTitle" name="title" class="form-input" placeholder="Ex: Ligar para cliente" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Data de Vencimento *</label>
+                        <input type="date" id="editTaskDueDate" name="dueDate" class="form-input" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Associar a Contato</label>
+                        <select id="editTaskContactId" name="contactId" class="form-select">
+                            <option value="">Tarefa geral (sem contato)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" onclick="saveEditedTask()" class="btn btn-success">Salvar Alterações</button>
+                        <button type="button" onclick="hideModal('editTaskModal')" class="btn btn-secondary">Cancelar</button>
+                    </div>
                 </div>
             </form>
         </div>

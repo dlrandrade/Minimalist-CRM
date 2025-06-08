@@ -38,24 +38,62 @@
                     <input type="email" name="email" class="form-input" placeholder="email@exemplo.com" required>
                 </div>
 
-                <div class="form-group">
-                    <label class="form-label">Telefone</label>
-                    <input type="tel" name="phone" class="form-input" placeholder="(11) 99999-9999">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        <label class="form-label">Telefone</label>
+                        <input type="tel" name="phone" class="form-input" placeholder="(11) 99999-9999">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Cidade</label>
+                        <input type="text" name="city" class="form-input" placeholder="Cidade">
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        <label class="form-label">Empresa</label>
+                        <input type="text" name="company" class="form-input" placeholder="Nome da empresa">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Cargo</label>
+                        <input type="text" name="position" class="form-input" placeholder="Cargo/Função">
+                    </div>
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">Empresa</label>
-                    <input type="text" name="company" class="form-input" placeholder="Nome da empresa">
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Cargo</label>
-                    <input type="text" name="position" class="form-input" placeholder="Cargo/Função">
+                    <label class="form-label">Plano</label>
+                    <select name="plan" class="form-select">
+                        <option value="">Selecionar plano</option>
+                        <option value="Básico">Básico</option>
+                        <option value="Plus">Plus</option>
+                        <option value="Max">Max</option>
+                    </select>
                 </div>
 
                 <div class="form-group">
                     <label class="form-label">Observações</label>
                     <textarea name="notes" class="form-textarea" placeholder="Informações adicionais sobre o contato..."></textarea>
+                </div>
+
+                <div class="form-group" id="pipelineSection" style="border: 2px dashed var(--border); padding: 1rem; border-radius: var(--radius); background: rgba(99, 102, 241, 0.05);">
+                    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;">
+                        <input type="checkbox" id="sendToPipeline" name="sendToPipeline" style="transform: scale(1.2);">
+                        <label for="sendToPipeline" class="form-label" style="margin: 0; font-weight: 600; color: var(--primary);">
+                            Enviar para Pipeline de Vendas
+                        </label>
+                    </div>
+                    
+                    <div id="pipelineStageGroup" style="display: none;">
+                        <label class="form-label">Estágio Inicial</label>
+                        <select name="pipelineStage" class="form-select">
+                            <option value="Lead">Lead</option>
+                            <option value="Qualificação">Qualificação</option>
+                            <option value="Proposta">Proposta</option>
+                            <option value="Negociação">Negociação</option>
+                        </select>
+                    </div>
                 </div>
 
                 <div class="form-actions">
@@ -71,6 +109,14 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             loadContactForm();
+            
+            // Toggle pipeline stage selection
+            const sendToPipelineCheckbox = document.getElementById('sendToPipeline');
+            const pipelineStageGroup = document.getElementById('pipelineStageGroup');
+            
+            sendToPipelineCheckbox.addEventListener('change', function() {
+                pipelineStageGroup.style.display = this.checked ? 'block' : 'none';
+            });
         });
     </script>
 </body>
