@@ -1,24 +1,87 @@
+
 <!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>vanilla-crm-toolkit</title>
-    <meta name="description" content="Lovable Generated Project" />
-    <meta name="author" content="Lovable" />
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRM Minimalista - Dashboard</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <h1 class="logo">CRM Minimalista</h1>
+            <nav class="nav">
+                <a href="index.html" class="nav-link active">Dashboard</a>
+                <a href="contacts.html" class="nav-link">Contatos</a>
+                <a href="tasks.html" class="nav-link">Tarefas</a>
+                <a href="pipeline.html" class="nav-link">Pipeline</a>
+            </nav>
+        </div>
+    </header>
 
-    <meta property="og:title" content="vanilla-crm-toolkit" />
-    <meta property="og:description" content="Lovable Generated Project" />
-    <meta property="og:type" content="website" />
-    <meta property="og:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+    <main class="main">
+        <div class="container">
+            <section class="dashboard">
+                <h2>Dashboard</h2>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h3>Total de Contatos</h3>
+                        <div class="stat-number" id="totalContacts">0</div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <h3>Tarefas Pendentes</h3>
+                        <div class="stat-number" id="pendingTasks">0</div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <h3>Oportunidades Ativas</h3>
+                        <div class="stat-number" id="activeDeals">0</div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <h3>Valor Total Pipeline</h3>
+                        <div class="stat-number" id="totalValue">R$ 0</div>
+                    </div>
+                </div>
 
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:site" content="@lovable_dev" />
-    <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
-  </head>
+                <div class="dashboard-sections">
+                    <section class="section">
+                        <h3>Ações Rápidas</h3>
+                        <div class="quick-actions">
+                            <a href="contact-form.html" class="btn btn-primary">Novo Contato</a>
+                            <a href="tasks.html" class="btn btn-secondary">Ver Tarefas</a>
+                            <a href="pipeline.html" class="btn btn-secondary">Ver Pipeline</a>
+                        </div>
+                    </section>
 
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+                    <section class="section">
+                        <h3>Tarefas para Hoje</h3>
+                        <div id="todayTasks" class="today-tasks">
+                            <p class="empty-state">Nenhuma tarefa para hoje.</p>
+                        </div>
+                    </section>
+
+                    <section class="section">
+                        <h3>Contatos Recentes</h3>
+                        <div id="recentContacts" class="recent-contacts">
+                            <p class="empty-state">Nenhum contato encontrado.</p>
+                        </div>
+                    </section>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <script src="js/dataService.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        // Carregar dados do dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            loadDashboardData();
+        });
+    </script>
+</body>
 </html>
