@@ -9,7 +9,174 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      contacts: {
+        Row: {
+          city: string | null
+          company: string | null
+          created_at: string
+          email: string
+          id: string
+          name: string
+          notes: string | null
+          payment_day: number | null
+          phone: string | null
+          plan: string | null
+          position: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          city?: string | null
+          company?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          name: string
+          notes?: string | null
+          payment_day?: number | null
+          phone?: string | null
+          plan?: string | null
+          position?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          city?: string | null
+          company?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string
+          notes?: string | null
+          payment_day?: number | null
+          phone?: string | null
+          plan?: string | null
+          position?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      deals: {
+        Row: {
+          contact_id: string | null
+          created_at: string
+          id: string
+          name: string
+          stage: string
+          updated_at: string
+          user_id: string
+          value: number
+        }
+        Insert: {
+          contact_id?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          stage: string
+          updated_at?: string
+          user_id: string
+          value?: number
+        }
+        Update: {
+          contact_id?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          stage?: string
+          updated_at?: string
+          user_id?: string
+          value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deals_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      interactions: {
+        Row: {
+          contact_id: string
+          created_at: string
+          date: string
+          id: string
+          notes: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          contact_id: string
+          created_at?: string
+          date: string
+          id?: string
+          notes: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          contact_id?: string
+          created_at?: string
+          date?: string
+          id?: string
+          notes?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "interactions_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tasks: {
+        Row: {
+          completed: boolean
+          contact_id: string | null
+          created_at: string
+          due_date: string
+          id: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed?: boolean
+          contact_id?: string | null
+          created_at?: string
+          due_date: string
+          id?: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed?: boolean
+          contact_id?: string | null
+          created_at?: string
+          due_date?: string
+          id?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tasks_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
