@@ -23,7 +23,7 @@ interface DealFormProps {
 const STAGES = ['Lead', 'Qualificação', 'Proposta', 'Negociação', 'Ganho/Cliente', 'Perdido'];
 
 export function DealForm({ dealId, contacts, onSave, onCancel }: DealFormProps) {
-  const [formData, setFormData] = useState<Partial<DealInsert>>({
+  const [formData, setFormData] = useState<Omit<DealInsert, 'user_id'>>({
     name: '',
     value: 0,
     contact_id: null,
@@ -44,7 +44,8 @@ export function DealForm({ dealId, contacts, onSave, onCancel }: DealFormProps) 
     try {
       const deal = await dealsService.getDeal(dealId);
       if (deal) {
-        setFormData(deal);
+        const { user_id, created_at, updated_at, id, ...dealData } = deal;
+        setFormData(dealData);
       }
     } catch (error) {
       toast({
@@ -57,6 +58,16 @@ export function DealForm({ dealId, contacts, onSave, onCancel }: DealFormProps) 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!formData.name) {
+      toast({
+        title: "Campo obrigatório",
+        description: "Nome da oportunidade é obrigatório.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -107,7 +118,7 @@ export function DealForm({ dealId, contacts, onSave, onCancel }: DealFormProps) 
     }
   };
 
-  const handleInputChange = (field: keyof DealInsert, value: any) => {
+  const handleInputChange = (field: keyof Omit<DealInsert, 'user_id'>, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 

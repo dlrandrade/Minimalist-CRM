@@ -21,7 +21,7 @@ interface TaskFormProps {
 }
 
 export function TaskForm({ taskId, contacts, onSave, onCancel }: TaskFormProps) {
-  const [formData, setFormData] = useState<Partial<TaskInsert>>({
+  const [formData, setFormData] = useState<Omit<TaskInsert, 'user_id'>>({
     title: '',
     due_date: new Date().toISOString().split('T')[0],
     contact_id: null,
@@ -42,7 +42,8 @@ export function TaskForm({ taskId, contacts, onSave, onCancel }: TaskFormProps) 
     try {
       const task = await tasksService.getTask(taskId);
       if (task) {
-        setFormData(task);
+        const { user_id, created_at, updated_at, id, ...taskData } = task;
+        setFormData(taskData);
       }
     } catch (error) {
       toast({
@@ -55,6 +56,16 @@ export function TaskForm({ taskId, contacts, onSave, onCancel }: TaskFormProps) 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!formData.title) {
+      toast({
+        title: "Campo obrigatório",
+        description: "Título da tarefa é obrigatório.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -105,7 +116,7 @@ export function TaskForm({ taskId, contacts, onSave, onCancel }: TaskFormProps) 
     }
   };
 
-  const handleInputChange = (field: keyof TaskInsert, value: any) => {
+  const handleInputChange = (field: keyof Omit<TaskInsert, 'user_id'>, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 

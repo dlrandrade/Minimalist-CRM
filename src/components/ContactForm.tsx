@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { contactsService } from '@/services/contactsService';
+import { dealsService } from '@/services/dealsService';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -21,7 +22,7 @@ interface ContactFormProps {
 }
 
 export function ContactForm({ contactId, onSave, onCancel }: ContactFormProps) {
-  const [formData, setFormData] = useState<Partial<ContactInsert>>({
+  const [formData, setFormData] = useState<Omit<ContactInsert, 'user_id'>>({
     name: '',
     email: '',
     phone: '',
@@ -49,7 +50,8 @@ export function ContactForm({ contactId, onSave, onCancel }: ContactFormProps) {
     try {
       const contact = await contactsService.getContact(contactId);
       if (contact) {
-        setFormData(contact);
+        const { user_id, created_at, updated_at, id, ...contactData } = contact;
+        setFormData(contactData);
       }
     } catch (error) {
       toast({
@@ -62,28 +64,48 @@ export function ContactForm({ contactId, onSave, onCancel }: ContactFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!formData.name || !formData.email) {
+      toast({
+        title: "Campos obrigatórios",
+        description: "Nome e email são obrigatórios.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setLoading(true);
 
     try {
+      let savedContact;
+      
       if (contactId) {
-        await contactsService.updateContact(contactId, formData);
+        savedContact = await contactsService.updateContact(contactId, formData);
         toast({
           title: "Contato atualizado",
           description: "O contato foi atualizado com sucesso.",
         });
       } else {
-        const newContact = await contactsService.createContact(formData);
+        savedContact = await contactsService.createContact(formData);
         
         // Se deve enviar para pipeline, criar uma oportunidade
-        if (sendToPipeline && newContact) {
-          // Aqui precisaríamos do serviço de deals que criaremos depois
-          console.log('Enviando para pipeline:', { contactId: newContact.id, stage: pipelineStage });
+        if (sendToPipeline && savedContact) {
+          await dealsService.createDeal({
+            name: `Oportunidade - ${savedContact.name}`,
+            value: 0,
+            contact_id: savedContact.id,
+            stage: pipelineStage
+          });
+          toast({
+            title: "Contato criado e enviado para pipeline",
+            description: "O contato foi criado e uma oportunidade foi adicionada ao pipeline.",
+          });
+        } else {
+          toast({
+            title: "Contato criado",
+            description: "O contato foi criado com sucesso.",
+          });
         }
-        
-        toast({
-          title: "Contato criado",
-          description: "O contato foi criado com sucesso.",
-        });
       }
       
       onSave();
@@ -98,7 +120,7 @@ export function ContactForm({ contactId, onSave, onCancel }: ContactFormProps) {
     }
   };
 
-  const handleInputChange = (field: keyof ContactInsert, value: any) => {
+  const handleInputChange = (field: keyof Omit<ContactInsert, 'user_id'>, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
@@ -223,7 +245,7 @@ export function ContactForm({ contactId, onSave, onCancel }: ContactFormProps) {
                 <Checkbox
                   id="sendToPipeline"
                   checked={sendToPipeline}
-                  onCheckedChange={setSendToPipeline}
+                  onCheckedChange={(checked) => setSendToPipeline(checked === true)}
                 />
                 <Label htmlFor="sendToPipeline" className="font-semibold text-blue-700">
                   Enviar para Pipeline de Vendas
