@@ -4,6 +4,7 @@ import { contactsService } from '@/services/contactsService';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
+import { ContactForm } from './ContactForm';
 import type { Database } from '@/integrations/supabase/types';
 
 type Contact = Database['public']['Tables']['contacts']['Row'];
@@ -11,6 +12,8 @@ type Contact = Database['public']['Tables']['contacts']['Row'];
 export function ContactList() {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [editingContactId, setEditingContactId] = useState<string | undefined>();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -54,6 +57,37 @@ export function ContactList() {
     }
   };
 
+  const handleEditContact = (id: string) => {
+    setEditingContactId(id);
+    setShowForm(true);
+  };
+
+  const handleNewContact = () => {
+    setEditingContactId(undefined);
+    setShowForm(true);
+  };
+
+  const handleFormSave = () => {
+    setShowForm(false);
+    setEditingContactId(undefined);
+    loadContacts();
+  };
+
+  const handleFormCancel = () => {
+    setShowForm(false);
+    setEditingContactId(undefined);
+  };
+
+  if (showForm) {
+    return (
+      <ContactForm
+        contactId={editingContactId}
+        onSave={handleFormSave}
+        onCancel={handleFormCancel}
+      />
+    );
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-8">
@@ -72,7 +106,7 @@ export function ContactList() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Button>Adicionar Primeiro Contato</Button>
+          <Button onClick={handleNewContact}>Adicionar Primeiro Contato</Button>
         </CardContent>
       </Card>
     );
@@ -82,7 +116,7 @@ export function ContactList() {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Contatos ({contacts.length})</h2>
-        <Button>Novo Contato</Button>
+        <Button onClick={handleNewContact}>Novo Contato</Button>
       </div>
 
       <div className="grid gap-4">
@@ -101,7 +135,11 @@ export function ContactList() {
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  <Button variant="outline" size="sm">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => handleEditContact(contact.id)}
+                  >
                     Editar
                   </Button>
                   <Button 

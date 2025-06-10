@@ -5,17 +5,30 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ContactList } from './ContactList';
+import { Pipeline } from './Pipeline';
+import { TasksList } from './TasksList';
 import { useToast } from '@/hooks/use-toast';
 import { contactsService } from '@/services/contactsService';
+import { dealsService } from '@/services/dealsService';
+import { tasksService } from '@/services/tasksService';
+import { seedDataService } from '@/services/seedDataService';
 
 interface DashboardProps {
   user: User;
 }
 
+type ViewType = 'dashboard' | 'contacts' | 'pipeline' | 'tasks';
+
 export function Dashboard({ user }: DashboardProps) {
   const [loading, setLoading] = useState(false);
-  const [contactsCount, setContactsCount] = useState(0);
-  const [activeView, setActiveView] = useState<'dashboard' | 'contacts'>('dashboard');
+  const [seedingData, setSeedingData] = useState(false);
+  const [stats, setStats] = useState({
+    contactsCount: 0,
+    pendingTasks: 0,
+    activeDeals: 0,
+    totalValue: 0
+  });
+  const [activeView, setActiveView] = useState<ViewType>('dashboard');
   const { toast } = useToast();
 
   useEffect(() => {
@@ -24,10 +37,52 @@ export function Dashboard({ user }: DashboardProps) {
 
   const loadDashboardStats = async () => {
     try {
-      const count = await contactsService.getContactsCount();
-      setContactsCount(count);
+      const [contactsCount, allDeals, allTasks] = await Promise.all([
+        contactsService.getContactsCount(),
+        dealsService.getDeals(),
+        tasksService.getTasks()
+      ]);
+
+      const activeDeals = allDeals.filter(deal => !['Ganho/Cliente', 'Perdido'].includes(deal.stage));
+      const pendingTasks = allTasks.filter(task => !task.completed);
+      const totalValue = activeDeals.reduce((sum, deal) => sum + Number(deal.value), 0);
+
+      setStats({
+        contactsCount,
+        pendingTasks: pendingTasks.length,
+        activeDeals: activeDeals.length,
+        totalValue
+      });
     } catch (error) {
       console.error('Erro ao carregar estatísticas:', error);
+    }
+  };
+
+  const handleCreateSampleData = async () => {
+    setSeedingData(true);
+    try {
+      const success = await seedDataService.createSampleData();
+      if (success) {
+        toast({
+          title: "Dados de exemplo criados!",
+          description: "Foram criados contatos, oportunidades, tarefas e interações de exemplo.",
+        });
+        loadDashboardStats();
+      } else {
+        toast({
+          title: "Erro ao criar dados",
+          description: "Houve um problema ao criar os dados de exemplo.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Erro ao criar dados",
+        description: "Houve um problema ao criar os dados de exemplo.",
+        variant: "destructive",
+      });
+    } finally {
+      setSeedingData(false);
     }
   };
 
@@ -50,6 +105,13 @@ export function Dashboard({ user }: DashboardProps) {
     }
   };
 
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    }).format(value);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white shadow-sm border-b">
@@ -58,26 +120,24 @@ export function Dashboard({ user }: DashboardProps) {
             <h1 className="text-2xl font-bold text-gray-900">CRM Minimalista</h1>
             <div className="flex items-center space-x-4">
               <nav className="flex space-x-4">
-                <button
-                  onClick={() => setActiveView('dashboard')}
-                  className={`px-3 py-2 rounded-md text-sm font-medium ${
-                    activeView === 'dashboard'
-                      ? 'bg-blue-100 text-blue-700'
-                      : 'text-gray-600 hover:text-gray-900'
-                  }`}
-                >
-                  Dashboard
-                </button>
-                <button
-                  onClick={() => setActiveView('contacts')}
-                  className={`px-3 py-2 rounded-md text-sm font-medium ${
-                    activeView === 'contacts'
-                      ? 'bg-blue-100 text-blue-700'
-                      : 'text-gray-600 hover:text-gray-900'
-                  }`}
-                >
-                  Contatos
-                </button>
+                {[
+                  { key: 'dashboard', label: 'Dashboard' },
+                  { key: 'contacts', label: 'Contatos' },
+                  { key: 'pipeline', label: 'Pipeline' },
+                  { key: 'tasks', label: 'Tarefas' }
+                ].map(({ key, label }) => (
+                  <button
+                    key={key}
+                    onClick={() => setActiveView(key as ViewType)}
+                    className={`px-3 py-2 rounded-md text-sm font-medium ${
+                      activeView === key
+                        ? 'bg-blue-100 text-blue-700'
+                        : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
               </nav>
               <span className="text-sm text-gray-600">
                 Olá, {user.email}
@@ -103,7 +163,7 @@ export function Dashboard({ user }: DashboardProps) {
                   <CardTitle className="text-sm font-medium">Total de Contatos</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{contactsCount}</div>
+                  <div className="text-2xl font-bold">{stats.contactsCount}</div>
                   <p className="text-xs text-muted-foreground">Contatos cadastrados</p>
                 </CardContent>
               </Card>
@@ -113,7 +173,7 @@ export function Dashboard({ user }: DashboardProps) {
                   <CardTitle className="text-sm font-medium">Tarefas Pendentes</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">0</div>
+                  <div className="text-2xl font-bold">{stats.pendingTasks}</div>
                   <p className="text-xs text-muted-foreground">Tarefas em aberto</p>
                 </CardContent>
               </Card>
@@ -123,18 +183,18 @@ export function Dashboard({ user }: DashboardProps) {
                   <CardTitle className="text-sm font-medium">Oportunidades Ativas</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">0</div>
+                  <div className="text-2xl font-bold">{stats.activeDeals}</div>
                   <p className="text-xs text-muted-foreground">No pipeline</p>
                 </CardContent>
               </Card>
 
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Valor Total</CardTitle>
+                  <CardTitle className="text-sm font-medium">Valor em Negociação</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">R$ 0,00</div>
-                  <p className="text-xs text-muted-foreground">Em negociação</p>
+                  <div className="text-2xl font-bold">{formatCurrency(stats.totalValue)}</div>
+                  <p className="text-xs text-muted-foreground">Oportunidades ativas</p>
                 </CardContent>
               </Card>
             </div>
@@ -146,19 +206,42 @@ export function Dashboard({ user }: DashboardProps) {
               <p className="text-gray-600 mb-6">
                 Seu CRM agora está conectado ao Supabase com autenticação e banco de dados real.
               </p>
-              <div className="space-x-4">
-                <Button onClick={() => setActiveView('contacts')}>
-                  Ver Contatos
-                </Button>
-                <Button variant="outline">
-                  Adicionar Contato
-                </Button>
+              <div className="space-x-4 space-y-2">
+                <div className="flex justify-center gap-4 mb-4">
+                  <Button onClick={() => setActiveView('contacts')}>
+                    Ver Contatos
+                  </Button>
+                  <Button variant="outline" onClick={() => setActiveView('pipeline')}>
+                    Ver Pipeline
+                  </Button>
+                  <Button variant="outline" onClick={() => setActiveView('tasks')}>
+                    Ver Tarefas
+                  </Button>
+                </div>
+                
+                {stats.contactsCount === 0 && (
+                  <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+                    <p className="text-sm text-blue-700 mb-3">
+                      Quer testar o CRM com dados de exemplo?
+                    </p>
+                    <Button 
+                      onClick={handleCreateSampleData}
+                      disabled={seedingData}
+                      variant="outline"
+                      className="border-blue-300 text-blue-700 hover:bg-blue-100"
+                    >
+                      {seedingData ? 'Criando dados...' : 'Criar Dados de Exemplo'}
+                    </Button>
+                  </div>
+                )}
               </div>
             </div>
           </>
         )}
 
         {activeView === 'contacts' && <ContactList />}
+        {activeView === 'pipeline' && <Pipeline />}
+        {activeView === 'tasks' && <TasksList />}
       </main>
     </div>
   );
